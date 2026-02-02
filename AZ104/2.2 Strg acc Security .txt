@@ -1,0 +1,89 @@
+# Storage Acc security
+
+# Storage Acc security
+
+# Storage Acc network Acces
+> Cretae storage account > Network (Enable Public access: from all, selected via IP, disable public access (Require creation of private endpoint(Sub, Resource Group, Location, Name, Storage sub resource, Virtual network, Subnet)))
+> storage account > Networking > Firewalls and vnets > Add existing virtual network (Select one form the group) > Firewall > Add your client IP address 
+
+# Storage Acc access keys (Always generated even when they are disabled, could be enabled on configuration of storage acc)
+- Rotate keys generate new ones
+
+# Access Keys from CLI
+# List all storage account names
+az storage account list --query [].name
+# List keys for a specific storage account in resource group 'hq'
+az storage account keys list --account-name storacctyhz44 --resource-group hq --output table
+# Renew primary key for the storage account
+az storage account keys renew -g hq -n storacctyhz44 --key primary
+# Renew secondary key for the storage account
+az storage account keys renew -g hq -n storacctyhz44 --key secondary
+
+# Access Keys from Power shell
+# Find all commands related to 'storageaccount'
+get-command *storageaccount*
+# Get storage account keys for a specific account in resource group 'hq'
+get-azstorageaccountkey -resourcegroupname hq -Name storacctyhz44
+# Inspect properties of the returned keys
+get-azstorageaccountkey -resourcegroupname hq -Name storacctyhz44 | get-member -type property
+# Get the first key value (primary key)
+(get-azstorageaccountkey -resourcegroupname hq -Name storacctyhz44).value[0]
+# Get the second key value (secondary key)
+(get-azstorageaccountkey -resourcegroupname hq -Name storacctyhz44).value[1]
+# Regenerate the secondary key for the storage account
+New-AzStorageAccountKey -ResourceGroupName hq -Name storacctyhz44 -KeyName key2
+
+# SAS for Storage account (Connection string, token, blob service SAS URL,)
+- Services (Blob, file,...)
+- Allowed resource types (Service, container, object)
+- Permissions (Read, write, delete, list...)
+- Blob versioning permissions and index
+-Start and expire date 
+- Allowed protocols (HTTPS only HTTP too)
+- Connection string, token, blob service SAS URL
+
+# SAS for blob in container in Storage account (Blob SAS token, URL)
+> Storage account > Container > Blob > Generate SAS 
+- Signing key, store access policy, Permissions, start/expiry date, allowed IP addresses and Protocols HTTP, (Blob SAS token, URL)
+
+# Storage Access policy
+> Storage account > Container > Settings > Access policy > Add policy
+- Stored access policy > Add policy (Permission, start/expiry date)
+- Inmutable blob storage
+
+# Replicate region redundancy LRS {Local redundant, non critical} GRS {Geo redundant, backup scenarios} ZRS {Zone redundant, High availability} GZRS {Both GRS and ZRS}
+> Storage account > Data management > Redundancy > Prepare for failover (YES, second endpoint/location become the primary replicating data to secondary region using last Sync, it could be lost some data that were sync, GRS to LRS)
+
+# Encryption
+- CIA triad (Confidentiality, integrity, Availability)
+- AZ encryption and integrity (TLS transport layer security for HTTPS, VPNs, TDE SQL transparent data encryption, storage account encryption)
+- AZ Availability (Redundancy, ASR Azure site recovery backups)
+> Storage account > Encryption > Type (Microsoft OR Customer managed keys)
+> Resources > key vault > Access control IAM (Give access)
+> Resources > key vault > Objects > Keys > Settings > Access config (Az RBAC, Vaul policy)
+# Create key 
+> Resources > key vault > Objects > Keys > Create Key (Options: Generate, RSA or EC, RSA key 2048 OR 3072 OR 4096, Activation/expiration date, emabled yes/no, tags)
+- Storage acc and Keys vaults HAVE TO be in the same region 
+
+# Encrypting storage account (After key vault creation, Assign role encryption user and apply key to storage account)
+> Storage account > Encryption (Costumer Managed keys), Key selection (Select key from vault: Key vault OR Managed HSM (Cryptographic devices))
+- Identity type (System OR user assigned)
+> Key Vault > Access control (IAM) > RBAC role of Crypto Service Encryption User -> Assign access to managed identity (Storage account)
+
+# Manage service and private endpoints (Resources)
+- Endpoint (Virtual net interface connected to a subnet through network), it uses global Microsoft network 
+> Storage account > Security + networking > Networking > Disable public network access > Create private endpoints
+[
+  "Subscription",
+  "Resource group",
+  "Name",
+  "Network Interface Name",
+  "Region",
+  "Target sub-resource",
+  "Virtual network",
+  "Subnet",
+  "Network policy for private endpoints",
+  "Private IP configuration",
+  "Integrate with private DNS zone"
+]
+

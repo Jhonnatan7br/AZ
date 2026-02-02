@@ -1,0 +1,108 @@
+#Entra ID Security
+
+
+## conditional access : policiy creation [MFA]
+  Licenses
+## Identity Protection : Dashboard
+## User risk policy (Defaul policiy for compromised accounts is block access), policies could be enforced
+## Security Auth methods policies, enable Auth methods (account.activedirectory.windowure
+## Registration Campaign: Days allowed to snooze (It is a policy)
+
+- Per user MFA, redirect to account.activedirectory.windowsasure to see all user MFA enabled methods
+
+- Block or unblock user accounts > users grooup > Copy user principal name > sign as user on myapp.microsoft.com > See MFA on Entra ID Tenant > Block/unblock users
+It reamin blocked 90 days
+
+
+Tenant > Security > MFA > Block/Unblock user
+
+# Microsoft Entra Connect: link on premises AD with Entra ID
+- Cloud Sync (Multipe on prem AD forests, cloud agents and config data stored in Azure)
+- Connect Sync (Lightweight Dir Access Protocol LDAP connectivity, On prem Agents,storage on prem, more features )
+- Entra ID tenant Custom Domain NAme Suffix DNS has to match on premises AD domain name
+
+## Sync components (On premises Domain controlles with Entra connect connect agent - Domain name matching on premises AD domain)
+
+# Installing Microsoft Cloud Sync (Entra connect option
+- Require apropiate credencials, and local system req
+- After installing open wizard SetUp Connect provisioning agent > Extension Miccrosoft Entra Cloud Sync > Auth on entra ID > Sign in with tenant Admin account USER@DOMAIN.onmicrosoft.com > Config Service Account (Domain Admin Usernam) > Connect Active Directory with DOMAIN provAgentgMSA (MSA managed service account) > 
+portal Azure tenant > Entra connect > CLoud Sync config > New config AD to Microsoft Entra ID Sync > New cloud sync config and selet domain enabling password hash sync > review and sync config
+
+# Managing sync user 
+## Local service running with 
+- Mic Az AD connect Agent Updater (Auth)
+- Mic Az AD connect Provisioning Agent (Domain)
+Filter sync users - Tenant > Mic Entra Connect > Cloud Sync COnfig > DOMAIN > Scoping filters (All, security groups, organizational units)
+See AD users atributes - Tenant > Mic Entra Connect > Cloud Sync COnfig > DOMAIN > Atribute mapping
+View log in - Tenant > Mic Entra Connect > Cloud Sync COnfig > DOMAIN > Provisioning logs
+
+# Manage entra ID groups
+Tenant > Group
+To crete it require the following : Group type, Name, Entra roles can be assigned?, Membership type (Assigned, Dynamic User, Dynamic device), owners
+Groups could have licences, administrative units, RBAC from access control IAM
+RBAC (Roles Based access to resources, based on azure resource management)
+
+# CLoud shell CLI commands
+# List groups
+az ad group list --query [].displayName
+# Creating group with mandatory fields (display name, nickname)
+az ad group create --display-name ProjectA_Members --mail-nickname projecta_members
+# Add user by object ID
+az ad group member add --group ProjectA_Members --member-id 4518d5c8-2f53-415a-ac65-3836b4d110ee
+# Show users on the group selecting display name
+az ad group member add --group ProjectA_Members --query [].displayName
+# Delete group
+az ad group delete --group ProjectA_Members
+
+# CLoud shell Power shell
+#Display users on the tenant by attribute = displayname
+Get-azaduser | select displayname
+# Update user first creating variables with atributes UPN and CIty
+$upn = "acrozier@stefansammsoutlook.onmicrosoft.com"
+$city = "Milan"
+Update-AzADUser -UPNOrObjectId $upn -City $city
+# Create group
+New-AzADGroup -DisplayName ProjectB_Members -MailNickname ProjectB_Members
+# Create an array with members Id
+$members = @()
+$members += (Get-AzADUser -DisplayName "Lucas Brenner").Id
+$members += (Get-AzADUser -DisplayName "Alex Crozier").Id
+$members
+# Add members by ID 
+Add-AzADGroupMember -TargetGroupObjectID ffba689f-6279-4d50-92cb-11eab60e6b85 -MemberObjectID $members
+
+# Entra ID Dynamic Groups (Different from traditional)
+- Group determined by attribute (User or device attributes)
+- require at least Entra ID Premium P1 licence or equivalent (E3), P2 (E5) also works 
+- User and device attributes must be populated in Entra ID
+- Membership rules builded using the Rule Builder GUI or (Can be edited by the expression sintax
+- Set Owner of the group
+- Add dynamic query
+
+# New group (Group type, Group name, Membership type = DYNAMIC) If dynamic does not appear it might be for licence insufficiency
+- Config rules with AND conditions or syntax (user.city -eq "Milan") and (user.usageLocation -eq "Milan")
+user.accountEnabled -eq true
+(user.department -eq null)
+user.department -in ["A01","A02","A03"]
+user.displayName -match "Da.*"
+(user.department -eq "Sales") -and -not (user.jobTitle -contains "Manager")
+(device.deviceOSType -eq "iPad") -or (device.deviceOSType -eq "iPhone")
+(device.deviceOSType -contains "AndroidEnterprise")
+
+# SSGM Enabling Self service group management (Similar to a help desk ticket)
+- Groups (All) view on the tenant > General > SSGM = Yes
+- Sign in ass user on myapps.microsoft.com/ > Groups "I am in" or "I own" > Join group (Depending the policy of the group it can be requested: Policy This group is open to join for all users, This group requires owner approval, Only the owner of this group can add members)
+
+# Add licences from tenant
+- Licences overview > Managed purchased licences (Entra ID P2, MS 365 Business premium, Entra ID Governance)
+- Some licences might require usage location added from setting
+- Licences can be added for groups, users
+
+# Joining devices to the Entra ID tenant
+- All Devices view on tenant > Azure DevOps Devices
+- From device account setting > Set work or school account > Using UPN and password 
+- Using remote desktop connection using device IP and UPN sign in tenant as remote desktop
+
+# Configure Entra ID Conditional Access (Need at leas a P1 licence)
+- Tenant > Security > Conditional Access > Create policy > (Name, users, target resources, conditions [Uers, sign in risk, platforms and operative systems, Locations,  client apps], grant or block access, enable policy [Report only, On, Off]
+- Tenant > Security > Conditional Access > Named location +Countries location (IPv4, IPv6, GPS coordinates) > +IP ranges location (IPv4, IPv6 ranges)

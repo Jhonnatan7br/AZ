@@ -1,0 +1,99 @@
+# AZ Policies and Compliance
+# AZ Policies (More granular than RBAC), managed from portal, CLI and PowerShell
+- Cloud resource deployment and config compliance control
+- Type: Custom, static, Builtin
+- Definition: Initiative or policy
+- Category: Project, security center, monitoring, SDN, etc
+
+- Control types of resources and where these resources that can be deployed, assign tags
+- Parameters assigned to management groups, suscriptions and resource groups
+- AZ policies effects could be Append, Audit, AuditIfNotExists, Deny
+- AZ policies initiatives = Groups of policies
+
+# AZ Policies from portal
+View all policies > Policy > Definitions (Table view or Json) 
+Assigments to apply policies > Policy > Assigments > Assign new policy (Scope, policy definition, assignment name)
+Compliance of assigned policies and initiatives
+Excemptions of policies 
+
+# AZ Policies on CLI
+# 1. List all policy definitions in a table format
+az policy definition list -o table
+# Displays all available Azure Policy definitions in a table view.
+# 2. List only the display names of all policy definitions
+az policy definition list --query [].displayName
+# Extracts and shows only the displayName property of each policy definition.
+# 3. Filter policy definitions by display name "Allowed virtual machine size SKUs"
+az policy definition list --query "[?displayName=='Allowed virtual machine size SKUs']"
+# Returns details of the policy definition where displayName matches "Allowed virtual machine size SKUs".
+# 4. Show the value of the $policy variable (Policy Definition ID)
+echo $policy
+# Displays the Policy Definition ID stored in the variable $policy.
+# 5. Get the resource group ID for 'Hq' and store it in $scope
+scope=$(az group show --name 'Hq' --output tsv --query id)
+# Retrieves the resource group ID for 'Hq' and saves it in the variable $scope.
+# 6. Show the value of the $scope variable (Resource Group ID)
+echo $scope
+# Displays the resource group ID stored in $scope.
+# 7. Define policy parameters for allowed VM SKUs
+policyparam='{"listOfAllowedSKUs": { "value": ["Standard_D2s_v3", "Standard_D4s_v3", "Standard_DS1_v2", "Standard_DS2_v2"]}}'
+# Creates a JSON string specifying allowed VM sizes and stores it in $policyparam.
+# 8. Show the policy parameters
+echo $policyparam
+# Displays the JSON string stored in $policyparam.
+# 9. Create a policy assignment using the defined scope, policy, and parameters
+az policy assignment create --name 'Allowed Virtual Machine SKUs' \
+  --display-name 'Allowed Virtual Machine SKUs' \
+  --scope $scope \
+  --policy $policy \
+  --params "$policyparam"
+# Assigns the policy to the specified scope with the given parameters.
+# 10. List all policy assignments and show their display names
+az policy assignment list --query [].displayName
+# Displays the display names of all policy assignments.
+# 11. List all policy assignments without strict scope matching
+az policy assignment list --disable-scope-strict-match --query [].displayName
+echo $policyparam
+# Displays the JSON string stored in 'policyparam', showing the allowed VM SKUs.
+
+# AZ Policies on PowerShell GET
+# 1. Get the resource group named 'hq' and store it in the variable $rg
+$rg = Get-AzResourceGroup -Name hq
+# Retrieves details of the Azure Resource Group named 'hq' and assigns it to $rg.
+# 2. Display the contents of the $rg variable
+$rg
+# Outputs the details of the resource group stored in $rg.
+# 3. Get all Azure Policy Definitions and store them in the variable $policies
+$policies = Get-AzPolicyDefinition
+$policies # Call all policies
+$policies[0] # Call first 
+$policies[0]
+
+# AZ Policies assignment on PowerShell 
+# 1. Check properties of the $policies object
+$policies | Get-Member -Type Property
+# Lists all properties of the $policies object to understand its structure.
+# 2. Check properties of the nested .properties object inside $policies
+$policies.properties | Get-Member -Type Property
+# Displays all properties available within the .properties attribute of each policy definition.
+# 3. Display the display names of all policy definitions
+$policies.properties.displayName
+# Outputs the DisplayName property for all policy definitions retrieved earlier.
+# 4. Filter a specific policy definition by DisplayName and store it in $definition
+$definition = Get-AzPolicyDefinition | Where-Object { $_.Properties.DisplayName -eq "Audit virtual machines without disaster recovery configured" }
+# Retrieves all policy definitions and filters for the one with DisplayName equal to the specified string.
+# Stores the matching policy definition in $definition.
+# 5. Create a new policy assignment using the filtered policy definition
+New-AzPolicyAssignment -Name "VMs-DR Enabled" `
+    -DisplayName "Check for VM Disaster Recovery" `
+    -Scope $rg.ResourceId `
+    -PolicyDefinition $definition
+# Assigns the selected policy to the resource group scope:
+# -Name: Internal name for the assignment.
+# -DisplayName: Friendly name shown in Azure Portal.
+# -Scope: Resource group ID from $rg.
+# -PolicyDefinition: The policy definition object stored in $definition.
+
+
+# Policy definition from portal (Definition location, Name, Category, Scope)
+# Policy Initiative definitions (Definition location, Name, Category, Select policies added to the initiative, Groups of policies inside the initiative, Initiative and policy parameter)

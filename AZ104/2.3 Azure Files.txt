@@ -1,0 +1,86 @@
+
+# Azure files
+> Storage account > Data Storage > Create File Shares, fill (Name, tier, 
+Provides shared folders in the cloud hosted in an Azure Storage Account.
+
+## Configuration Details
+Storage Account Name Format: \\<storageaccount>.file.core.windows.net\<sharename>
+Settings: 
+- Share Name: Customizable.
+- Quota: Set in GiB.
+- Storage Tier: Hot, Cool, or Transaction Optimized.
+## Accessible via file sharing protocols:
+- SMB (Server Message Block) – Common in Windows environments.
+- NFS (Network File System) – Common in Linux/Unix environments.
+Important Note: A single file share cannot support both SMB and NFS simultaneously.
+- Premium Tier Requirement: NFS is only available in Premium performance tier storage accounts.
+## Access Methods
+- Windows: Map a drive letter (e.g., Z:) using PowerShell or net use.
+- Linux: Use mount points (e.g., /mnt/fileshare1) via scripts.
+- macOS: Similar to Linux using mount points.
+
+# Management Methods
+
+#Azure Portal
+Create file shares.
+Configure tier, quota, and backup.
+Upload files and manage directories.
+Create snapshots for point-in-time recovery.
+
+# Azure CLI
+az storage account list
+az storage account keys list
+az storage share create
+az storage file upload
+az storage file list
+# List storage account keys in table format
+az storage account keys list --account-name storacctyhZ44 --resource-group hq --output table
+# Set environment variable for storage access key
+AZURE_STORAGE_ACCESS_KEY="cRMB8GmUZcNWaBmmDKQC1BJ7Dg8I/9OnSoSjyQQUoeppobaFCsKxtVP7WePY+Uak7LEf3MhQ6iAStKe3LPA=="
+# Set environment variable for storage account name
+AZURE_STORAGE_ACCOUNT="storacctyhZ44"
+# Create a new file share named 'fileshare1'
+az storage share create --name fileshare1 --account-key $AZURE_STORAGE_ACCESS_KEY --account-name $AZURE_STORAGE_ACCOUNT
+# List all file shares in the storage account
+az storage share list --account-key $AZURE_STORAGE_ACCESS_KEY --account-name $AZURE_STORAGE_ACCOUNT --query [].name
+# Upload a file (Budget1.txt) to the 'fileshare1' share
+az storage file upload --account-key $AZURE_STORAGE_ACCESS_KEY --account-name $AZURE_STORAGE_ACCOUNT --share-name fileshare1 --source ./Budget1.txt
+# List files in 'fileshare1'
+az storage file list --share-name fileshare1 --account-key $AZURE_STORAGE_ACCESS_KEY --account-name $AZURE_STORAGE_ACCOUNT --query [].name
+
+
+# PowerShell
+New-AzStorageShare
+Get-AzStorageShare
+Set-AzStorageFileContent
+# Find all commands related to 'storageaccount'
+get-command *storageaccount*
+# Get storage account context
+$ctx = Get-AZStorageAccount -ResourceGroup hq -Name storacctyhZ44
+# Set context for later use
+$ctx = $ctx.Context
+# Create a new file share named 'fileshare2'
+New-AzStorageShare -Name "fileshare2" -Context $ctx
+# Retrieve details of the file share
+Get-AzStorageShare -Name "fileshare2" -Context $ctx
+# Upload a file (Budget1.txt) to the file share
+Set-AzStorageFileContent -ShareName "fileshare2" -Source "./Budget1.txt" -Path "Budget1.txt" -Context $ctx
+
+
+# Windows File Share Settings
+> Storage Account > File share > Connect (Select method: windows, select drive letter) > Copy script, paste in On Premises to use File Share
+# Windows Snapshot File Share Settings
+> Storage Account > File share > Snapshot > Connect (Select method: windows, select drive letter) > Copy script, paste in On Premises to use File Share
+
+# Linux File Share Settings CMD (Mount point, persistence)
+> Storage Account > File share > Connect (Select method: Linux) > Copy script, paste in On Premises to use File Share from CMD
+- Use mount command with cifs type.
+- Add entry to /etc/fstab for persistence.
+
+# Identity-Based Access & Permissions
+- Enable Microsoft Entra Connect to link Azure AD with on-prem AD.
+- Join storage account to AD domain.
+# Configure RBAC roles for SMB shares:
+Storage File Data SMB: Reader OR Share Contributor OR Share Elevated Contributor
+- Map drive letter or mount point.
+- Apply NTFS permissions.

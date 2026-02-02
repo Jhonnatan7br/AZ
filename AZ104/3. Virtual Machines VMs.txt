@@ -1,0 +1,185 @@
+# AZ VM 
+- Shared hypervisors (multi-tenant)
+- Dedicated hosts (premium)
+- Creating a Virtual machine also create following resources: Public IP address, Network security group, Network Interface, Disk, Virtual network...
+- AZ VM Management: AZ portal, AZ (CLI), PowerShell, APIs templates
+# Supported OS for VMs:
+- Windows Server & Client versions
+- Linux distributions (Red Hat, Ubuntu, CentOS, etc.) - Required Port TCP 22, when RDP is port 3389
+# AZ VM Details
+- Resource group, location, VM name
+- Image, size (virtual CPUs), Random Access Memory (RAM), number of data disks
+- OS credentials
+- VM extensions
+- Vnet, Subnet, public IP address (default enabled, but not recommended), Network Security Group (NSG)
+- Security group, load balancing
+- Auto-shutdown, backup
+
+# AZ Windows VM
+- Specify logon credentials
+- Connect using Remote Desktop Protocol (RDP port 3389)
+- Ensure firewalls allow RDP
+- Remote management through Azure Bastion: No public IP required
+- You can then save it as a virtual machine image to deploy other VMs from it.
+
+# AZ Linux VM (TCP 22)
+- Username/password authentication
+- Public key authentication
+- Connect using Secure Shell (SSH)
+- Ensure firewalls allow SSH
+- Remote management through Azure Bastion: No public IP required 
+
+# AZ VM Scale Set (VMSS)
+- Used with load balancing
+- The scale set can be autoscaled: Scaling out,Scaling in
+- VMs must be identical: Same OS image
+- Spot instances: Reduce costs
+
+# AZ VM general Details
+> Create resource > Virtual machine > Basics {
+Create a virtual machine, your resources., Subscription *, Resource group *, Instance details, Virtual machine name *, Region *, Availability options, Availability zone *, Security type (Standard, Trusted launch VM = vTPM virtual Trusted Platform Module, Confidential), Image * (Linu, Windows, Red Hat..), VM architecture (Arm64, X64), Run with Azure Spot discount, Size *, Enable Hibernation (preview), Administrator account, Username *, Password *, Inbound port rules, Public inbound ports * (None, Allow selected ports), Select inbound ports RDP 3389 (Not the most secure, better Bastion), Licensing, Save up to 49% with a license you already own using Azure Hybrid Benefit, Would you like to use an existing Windows Server license?
+
+} > Disks {VM disk encryption Encryption at host, OS disk size, OS disk type *, Delete with VM, Key management, Enable Ultra Disk compatibility, Data disks for WindowsServer1, LUN, Create and attach a new disk, Attach an existing disk
+} > Networks {Network interface, Virtual network *, Subnet *, Public IP, NIC network security group (None, basic, advanced), Public inbound ports *, Select inbound ports *}
+} > Management {Microsoft Defender for Cloud, Enable basic plan for free, Identity, Enable system assigned managed identity
+} > Monitoring {Alerts, Enable recommended alert rules, Diagnostics, Boot diagnostics, Enable OS guest diagnostics, Health, Enable application health monitoring
+} > Advanced {Extensions, VM applications, Select a VM application to install, Custom data}
+
+# Create or use virtual net (Name, Adress space (Range, addresses, overlap), Subnets (Range, addresses)
+
+# Azure CLI:
+az vm create command
+az vm image list
+# Find Azure CLI commands related to VM
+az find "vm"
+# Find examples for creating a VM
+az find "vm create"
+# Get a virtual machine using REST API
+az rest --method get --url /subscriptions/{subscriptionId}/resourceGroups/{resourceGroupName}/providers/Microsoft.Compute/virtualMachines/{vmName}?api-version=2019-03-01
+# Create a default Ubuntu VM with SSH authentication
+az vm create --name MyVm --resource-group MyResourceGroup --image UbuntuLTS
+# List all VM images in table format
+az vm image list --output table
+# List VM images for Windows Server in East US region
+az vm image list --location eastus --publisher Microsoft --offer WindowsServer --all --output table
+# List VM images for Windows Server 2022 in East US region
+az vm image list --location eastus --publisher Microsoft --offer WindowsServer --sku 2022 --all --output table
+# Create a VM with specific configuration (Windows Server 2022, subnet, vnet, public IP, admin credentials)
+az vm create --resource-group Hq --subnet subnet2 --vnet-name vnet1 --name WinSrv2022-1 --image MicrosoftWindowsServer:WindowsServer:2022-datacenter-azure-edition:latest --public-ip-sku Standard --admin-username cblackwell --admin-password Pa$$w0rdABC123 --location eastus
+# List all VM names
+az vm list --query [].name
+
+
+# PowerShell:
+New-AzVM
+Get-AzVMImage
+# List all virtual networks and show name and location
+get-azvirtualNetwork | select name,location
+# Find PowerShell commands related to VM images
+get-command *vmimage*
+# Get available VM image offers for Windows Server in East US
+get-azvmimageoffer -location eastus -publishername MicrosoftWindowsServer
+# Get available VM image SKUs for Windows Server in East US
+get-azvmimagesku -location eastus -publishername MicrosoftWindowsServer -Offer WindowsServer | select skus
+# Useful cmdlets for VM configuration:
+# Add-AzVMNetworkInterface -> Set network profile
+# Set-AzVMOperatingSystem -> Set OS profile
+# Set-AzVMSourceImage -> Set source image
+# Set-AzVMOSDisk -> Set OS disk (storage profile)
+# Get-AzComputeResourceSku -> Find available VM sizes for subscription and region
+# Prompt for credentials and store in variable
+$creds = Get-Credential
+# Create a new VM with specified configuration
+New-AzVm -ResourceGroupName "Hq" `
+         -Name "WinSrv2022-1" `
+         -Location "EastUS" `
+         -VirtualNetworkName "vnet1" `
+         -SubnetName "subnet2" `
+         -SecurityGroupName "Windows_Management_Rules" `
+         -Image "MicrosoftWindowsServer:WindowsServer:2022-datacenter-azure-edition:latest" `
+         -OpenPorts 3389 `
+         -Credential $creds
+# Get all VMs in a specific resource group
+get-azvm -ResourceGroupName "Hq"
+
+
+# Redeploy VM 
+> VM > Help > Redeploy
+
+# Move Resources
+> Azure Resource Mover (Across Regions OR Resource group) > Select Source and destination
+> Resource Group
+
+# Resize VM (Scale Up and Down), Vertical autoscaling (Uo = more resources, down = less resources)
+> VM > Overview > Platform metrics (vCPUs, RAM (GiB), Data disks, Max IOPS, Local storage (GiB), Premium disk, Cost/month)
+> VM > Availability + Scale > Size, select another size to change
+get-command *resize*            
+# find commands related to "resize"
+$myvm = get-azvm -resourcegroupname hq -vmname WinSrv2022-1   # get VM object
+$myvm | get-member -type property                            # list VM properties
+$myvm.hardwareprofile | get-member -type property            # list hardware profile properties
+# Resize the VM
+Resize-AzVM -ResourceGroupName "rg1" -Name "vm1" -VMSize "Standard_D2s_v3"
+# Start the VM
+Start-AzVM -ResourceGroupName "rg1" -Name "vm1"
+
+# Bastion connection creates a host on a subnet in virtual network
+- vnet-bastion is a resource to connect to VM via browser (Virtual network subnet and vnet public address)
+- It does not expose public IP of VM
+- Connecting to VM via RDP (Remote desktop protocol) cant be used on internet as RDP has private key
+- Internet needs public key to connect to VM 
+> VM > Overview > Connect via bastion (Auth Type, Username,VM Password)
+Manage VMs using Azure Bastion (private IP access).
+- reset password > VM > Help > reset password
+
+
+# Linux SSH public key authentication (Using .ppk private key via TCP 22)
+- Public on cloud, private on device of user
+> VM (Has to be running) > Help > Reset Password, Add SSH public key (Username, SSH public key source, key pair name) > Download User private key and convert to .ppk format (Use PuTTY key generator importing OpenSSH private key file, converting and saving as .ppk file) > Set passphrase > Paste the IP address on PuTTY key generator > Set port 22 > Specify path of .ppk > Connect to VM with user and passphrase
+
+# Attach a managed disk to VM
+> VM > Availability + Scale > Size > Data Disks
+> VM > Settings > Disks > Create and attach new disk OR just attach > (Storage SSD/HHD, size)
+# Viw Disls
+> Resources > Disks > Settings > Size + Performace
+> VM > Connect via Bastion > Server management > File and storage services > Disks > Select volume and stablish name 
+
+
+# Disk Encryption: Requires Key Vault, RBAC & Disk Encryption Set (Azure service)
+> Create encryption set (Select the subscription to manage deployed your resources, Subscription, Resource group, Instance details, Disk encryption set name, Region, Encryption type (Customer managed), Encryption key, Key Vault)
+> Key Vault > Access control IAM > Assign role: Key Vault Crypto Service Encryption User (Key Vault Crypto Service Encryption User, Assign access to, User, group, or service principal, Managed identity, Members, Select members, Name, No members selected, Description, Optional)
+> Disk > Settings > Encryption > Key management > Select created one
+> Create managed Disk > Encryption > Select Key management > Select created one
+
+
+
+# Create custom VM images (Images and Azure compute galery of images are independent resources)
+- VMSS is Horizontal autoscaling (Out = more VMs, In = less VMs)
+- It helps to save time using create image for VMs
+> VM > Overview - Capture > Create image {Project details, Subscription, Resource group, Instance details, Region, Share image to Azure compute gallery}
+> Azure compute Gallery {Operating system state, Capturing a virtual machine, Target VM image definition, Version details, Version number, Create a VM image definition, Gen 2, Security type, Standard, VM architecture, x64, Arm64, Higher storage performance with NVMe (preview), Hibernation supported (preview), Accelerated networking, Publisher, quick24x7, Offer, ubuntu_with_stuff, SKU, 20_04-lts-gen2}
+
+# VM Scale Sets (VMSS) for autoscaling: It is a VM that does not appear with other VMs
+> Create Resource > VMSS {Subscription, Resource group, Scale set details, Virtual machine scale set name, Region, Availability zone, Orchestration, Orchestration mode, Security type, Instance details, Image, VM architecture, 
+}
+Flexible: achieve high availability in scale with identical or multiple virtual machine types 
+Uniform: optimized for large scale stateless workloads with identical instances
+> VMSS > Availability + scale > Scaling (Manual OR custom) > Scale based on a metric (Base on resource consumption CPU, GPU, etc) OR Specific instance count
+> Create resource > Load balancer {Virtual network, IP configuration, select VMSS}
+
+
+# Security Best Practices
+Avoid public IPs for VMs.
+Use Azure Bastion or VPN for private IP access.
+Enable SSH key authentication for Linux.
+Encrypt disks with customer-managed keys.
+
+
+# Summary
+- VM deployment (Portal, CLI, PowerShell)
+- VM lifecycle management (redeploy, move, resize)
+- Secure access (SSH, Bastion)
+- Disk operations (attach, encrypt)
+- Image management (custom images)
+- Scaling solutions (VMSS)
+

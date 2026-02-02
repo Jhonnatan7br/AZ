@@ -1,0 +1,78 @@
+# Manage Blob containers
+> Create container > select (blob type, Size, Access tier (Hot, Cool, Cold, Archive), blob index tags)
+- Generate SAS (Shared access Signature)
+- Access policy (Stored access policies, immutable blob storage)
+# Blob storage tiers
+> Storage acc > Container settings > Blob access tier (Default hot, cold)
+# Tier archive and rehidration
+> Create container > select (blob type = Archive) # To rehidratate to cold cool it could take hours
+> Storage acc > Data management > Life Cycle management > Add rules > fill [Name, scope, blob type (Block blobs, Append blobs), blob subtype base blobs (Base blobs, snapshots, versions), base blobs last modified or created, more than days ago, THEN selec action (move, delete 30, 90, 180)]
+
+
+# PowerShell manage blob 
+- Cloud shell creates automatically an storage account
+#visualize storage distribution
+dir
+# List commands related to storage accounts
+get-command *storageaccoun*
+# Create a new Azure Storage Account
+New-AzStorageAccount
+# Retrieve an existing Azure Storage Account
+Get-AzStorageAccount
+# Store storage account context in a variable
+$ctx = Get-AzStorageAccount -R hq -Name storacctyhz44
+# List properties of $ctx object
+$ctx | get-member -type property
+# Extract context property from $ctx
+$ctx = $ctx.context
+# Display updated $ctx
+$ctx
+# Create a new storage container named "customers" using context
+New-AZStorageContainer -Name "customers" -Context $ctx
+# Upload a file as a blob to the storage container from Cloudshell container
+Set-AZStorageBlobContent -File "./customer_data.docx" -container customers -blob customer_data.docx -context $ctx
+# List blobs inside the 'customers' container and show their names
+Get-AzStorageContainer -Name customers -Context $ctx | Get-AzStorageBlob | select name
+# Command to set Azure Storage Account properties
+Set-AzStorageAccount `
+    -ResourceGroupName HQ `      # Resource group name
+    -Name storacctyhz44 `        # Storage account name
+    -AccessTier Cool             # Access tier set to Cool
+
+
+# CLI manage blob 
+# List all storage accounts
+az storage account list
+# List storage account names only
+az storage account list --query [].name
+# List keys for a specific storage account in a resource group
+az storage account keys list --account-name storacctyhz44 --resource-group hq --output table
+# Set environment variable for storage account and display it
+AZURE_STORAGE_ACCOUNT="storacctyhz44"
+echo $AZURE_STORAGE_ACCOUNT
+# Set environment variable for access key and display it
+AZURE_STORAGE_ACCESS_KEY="Y+KyRYzbd2v8i482dhUnfKQ..."
+echo $AZURE_STORAGE_ACCESS_KEY
+# Create a new storage container using account name and key
+az storage container create --name westernregion --account-name $AZURE_STORAGE_ACCOUNT --account-key $AZURE_STORAGE_ACCESS_KEY
+
+# Microsoft Azure Storage Explorer 
+> Download app > Add Storage Account > Manage GUI
+# azcopy 
+> Download AZ copy.exe > Connect Within entra ID using tenant ID > Add Role (Storafe Blob Data Owner) from access control IAM
+azcopy login --tenant-id=XXX
+# Copy a local file to an Azure Blob Storage container using AzCopy
+azcopy copy Employee_Cards.xlsx https://storacctyhz44.blob.core.windows.net/projects/employee_cards.xlsx
+
+# Soft delete (max 365 days) and snapchots
+>Create storage account > Data protection
+- Only When storage acc is create it is set the obtion to soft delete and days
+- They can be viewed on deleted during retention, they could be undeleted
+
+---
+# Blob Versioning
+> Storage acc > Data management > Data Protection > Enable versioning for blobs (Keep all or delete after)
+> Storage acc > Container > Blobs versions (Could be download, make current version, generate SAS, delete, change tier, Access policy)
+
+# Immutable Blob versioning
+> Storage acc > Container settings > Access policy > Add policy - Immutable  Storage policy (Legal hold, time based retention in days{Protected append writes to Nonem append blobs, block and append blobs})

@@ -1,0 +1,59 @@
+# Containers 
+
+1 Application Containers — Core Concept
+- Provide a logical application isolation boundary
+-Can package: An entire application, or A single application component
+- Multiple applications (App A–G) can run:
+- On the same host OS
+- Using a shared container engine (e.g., Docker)
+- Each container includes its own: Binaries and libraries (bins/libs)
+- Containers run on top of: Host Operating System, Container runtime (Docker engine)
+
+2 Docker Container Architecture (Execution Stack), Host OS
+- Docker is Software Container Engine
+- Bins & Libraries
+- App-specific dependencies
+- Application Layer: One or more applications running in isolated containers
+
+3. Microservices Architecture
+- Applications are broken into small, focused services
+- Each microservice: Handles one specific business function. Can be deployed independently
+- A single microservice can be packaged as: One application container
+- Microservices communicate using: Message queues, Enables decoupling between components
+
+4. Container Images and Runtime
+- Container images: Contain all software and configuration needed to run an app
+- Running containers: Are created from container images
+- A container is: A runtime instance of an image
+
+5. Application Container Contents
+- Each container may include: Scripts and binaries, Container filesystem, App-specific libraries and components, Runtime environment (Linux, Python, Web servers), Configuration files, Supporting software tools
+
+6. Application Container Benefits
+- Portability
+- Applications run consistently across container hosts
+- Fast startup
+- Much quicker than virtual machines
+- Independent lifecycle
+- Code changes, updates, and testing occur per container
+
+7. Kubernetes — Overview
+- Open-source container orchestration platform
+- Manages containers across a cluster of machines
+- Provides containerized application management, including: Deployment, Scaling
+
+8. Kubernetes Benefits
+- Autoscaling
+- Automatically adjusts container count based on demand
+- Load balancing
+- Distributes traffic across containers
+- Desired state management: Ensures the system matches the declared configuration
+- Self-healing
+- Restarts or replaces failed containers automatically
+
+9. Kubernetes Pods
+- A Pod is the smallest deployable unit in Kubernetes
+- Pods are created and managed using: Deployment objects
+- A pod can: Run one or more containers
+- Use containers created from specified container images
+- Containers in a pod: Share networking and storage resources

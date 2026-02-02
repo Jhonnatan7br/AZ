@@ -1,0 +1,140 @@
+
+# Cost management & Budget setting
+# Cost management per subscription (Purchase reservations, AZ pricing calculator)
+- Ways to save on monthly charges 
+- VM cost quoted per hour, charged by second
+- Storage incurred 24/7
+- Set budget for monthly spend notifications
+- Enable VM auto autodown
+- Scale vertical always is more expensive
+
+- Instance pricing: VM, SQL DB, Storage
+- Reseved pricing: Commitment of 1-3 years, recommended for constant resource usage, for VMs pricing applies up to purchased quantity
+- AZ spot VMs: Unused compute capacity at up to a 90% discount, not guaranteed, could have interruptions, when exceed VM could be deallocated or deleted (Setpolicy) 
+
+- When it is being set resource creating, specify Image, SIze, Spot discount, Region, Term, Billing frecuency (Upfront: year, monthly)
+
+# VM autostop
+> VM instance > Automation > Task > Select template (Power off machine) > Fill (Name, Stop Time, Timezone, Interval, Frecuency, notify y/n )
+# VM autostart
+> VM instance > Automation > Task > Select template (Start machine) > Fill (Name, Start Time, Timezone, Interval, Frecuency, notify y/n )
+# View automate task start/stop
+> VM instance > Automation > Task > Runs > View logic apps
+
+# View dashboard cost
+> Subscriptions > Subscriptions> Cost by resource > resource group
+> Subscriptions > Subscriptions> Cost managemenr > Cost analysis (Could be downloaded)
+> Subscriptions > Subscriptions> Cost managemenr > Cost alerts
+> Resource group > Cost managemenr > Cost analysis
+
+# Tag resources (Labels that could be set on resource creation or after)
+> All resources > Tags (Resource could have 50 tags key value pair name : value)
+- Resources could be filtered by tags, as well as subscription cost analysis
+- Policy definition > Append a tag and its value to resources
+
+# Power Shell cost management with module reservatop
+install-module az.reservations
+get-command -Module az.reservations
+
+# Tagging from CLI
+# View tags
+az tag list
+az tag list --query [].tagName
+# Create tag
+az tag create --name NAME
+az tag create --name ClientType
+# Add value to tag
+az tag add-value --name ClientType --value VALUE
+az tag add-value --name ClientType --value Govt
+# Add tag to resource
+az RESOURCE TYPE update -g GROUP -n NAME --set tags.TAGNAME=VALUE
+az network vnet update -g hq -n vnet1 --set tags.ClientType=Govt
+# Show tags of resource
+az RESOURCE TYPE show -g GROUP -n NAME --query tags
+az network vnet show -g hq -n vnet --query tags
+
+# Tagging from PowerShell
+# ===========================
+# Azure PowerShell (Az) - Tagging Cheatsheet
+# ===========================
+# Prerequisites
+# Install and connect (run once per environment/session)
+# Install-Module -Name Az -Scope CurrentUser
+# Connect-AzAccount
+# Select-AzSubscription -SubscriptionId "<your-subscription-id>"
+# ---------------------------
+# 1) View tag definitions (subscription-level)
+# ---------------------------
+# List all tag definitions (names and values)
+Get-AzTag
+# Just the tag names
+(Get-AzTag).Properties.Tags | Select-Object -ExpandProperty TagName
+# ---------------------------
+# 2) Create a tag definition
+# ---------------------------
+New-AzTag -Name 'NAME'
+New-AzTag -Name 'ClientType'
+# ---------------------------
+# 3) Add a value to a tag definition
+# ---------------------------
+# Merge adds this value without removing existing ones
+Update-AzTag -Name 'ClientType' -Operation Merge -Value 'VALUE'
+Update-AzTag -Name 'ClientType' -Operation Merge -Value 'Govt'
+# Other operations:
+# Update-AzTag -Name 'ClientType' -Operation Replace -Value 'Govt'   # overwrite all values
+# Update-AzTag -Name 'ClientType' -Operation Delete -Value 'Govt'     # remove value
+# ---------------------------
+# 4) Add tag(s) to a resource (generic)
+# ---------------------------
+# Replace tags entirely with the hashtable provided:
+Set-AzResource `
+  -ResourceGroupName 'GROUP' `
+  -Name 'NAME' `
+  -ResourceType 'PROVIDER/TYPE' `
+  -Tag @{ TAGNAME = 'VALUE' } `
+  -Force
+# Example: VNet 'vnet1' in RG 'hq' -> ClientType=Govt
+Set-AzResource `
+  -ResourceGroupName 'hq' `
+  -Name 'vnet1' `
+  -ResourceType 'Microsoft.Network/virtualNetworks' `
+  -Tag @{ ClientType = 'Govt' } `
+  -Force
+# Add multiple tags at once
+Set-AzResource `
+  -ResourceGroupName 'hq' `
+  -Name 'vnet1' `
+  -ResourceType 'Microsoft.Network/virtualNetworks' `
+  -Tag @{ ClientType='Govt'; Owner='NetworkTeam'; Environment='Prod' } `
+  -Force
+# ---------------------------
+# 5) Show tags of a resource (generic)
+# ---------------------------
+(Get-AzResource `
+  -ResourceGroupName 'GROUP' `
+  -Name 'NAME' `
+  -ResourceType 'PROVIDER/TYPE').Tags
+# Example: show tags of VNet 'vnet1' in RG 'hq'
+(Get-AzResource `
+  -ResourceGroupName 'hq' `
+  -Name 'vnet1' `
+  -ResourceType 'Microsoft.Network/virtualNetworks').Tags
+# ---------------------------
+# Optional: Resource-specific approach for VNets
+# ---------------------------
+# Get, modify, and apply tags on a VNet using network cmdlets
+$vnet = Get-AzVirtualNetwork -Name 'vnet1' -ResourceGroupName 'hq'
+$vnet.Tag['ClientType'] = 'Govt'
+Set-AzVirtualNetwork -VirtualNetwork $vnet
+# Verify
+(Get-AzVirtualNetwork -Name 'vnet1' -ResourceGroupName 'hq').Tag
+# ---------------------------
+
+# Budget setting
+> Subscription > Budget > Add > Fill (Scope, filters, budget details (Name, reset period, creation date, expiration date, amount) > Set alert conditions and actions group (Subs, Resource Group, Action group name, display name, notification type, actions type), alert recipients
+> Resource group > Budget > Add > Fill (Scope, filters, budget details (Name, reset period, creation date, expiration date, amount)
+
+# Billing Invoices
+> Subscription > Billing profile invoices > Export to CSV OR Edit invoice details OR open specific Invoice (Download as PDF, invoice price sheet, Azure price sheet)
+
+

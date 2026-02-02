@@ -1,0 +1,68 @@
+# Resource Locking (Only could be made from suscribtions nd its inherited to groups) (Lock name, lock type(Delete OR Read-only))
+- Prevent unwanted resource config changes thorught az hierarchy
+- Management groups (Used for manage multiple suscriptions and governance)
+- People with collaborator role in RBAC could inhabilitate resource loock
+
+# CLI to Manage resource locks throught
+# Create a management-level lock on the current Azure subscription that prevents deletions
+az account lock create \
+  --name "No delete" \        # Friendly name for the lock (any string)
+  --lock-type CanNotDelete    # Lock type: blocks DELETE operations; read/update still allowed
+# List all subscription-level locks in a readable table
+az account lock list \
+  --output table              # Format the output as a table (other options: json, yaml, etc.)
+# Create a lock on a specific resource group named "Hq" that prevents modifications
+az group lock create \
+  --lock-type ReadOnly \      # Lock type: allows only read operations; blocks create/update/delete
+  -n NoModify \               # Short form of --name: the lock's friendly name
+  -g Hq                       # Target resource group (-g is short for --resource-group)
+# List all subscription-level locks again, showing both CanNotDelete and ReadOnly locks if applicable
+az account lock list \
+Add comments definition to the transcription of each command, Put everything in just one Box
+# Create a lock on a specific resource within a resource group to make it read-only
+az resource lock create \
+  --lock-type ReadOnly \                              # Lock type: restricts modifications; only read operations allowed
+  -n NoModify \                                       # Short form of --name: friendly name for the lock
+  -g Hq \                                             # Resource group where the resource resides
+  --resource storacctyhZ44 \                          # Name of the resource to lock (in this case, a storage account)
+
+
+# Power Shell Manage resource locks throught 
+# Create a ReadOnly lock at the resource group level using PowerShell
+New-AzResourceLock `
+  -LockName NoModify `                     # Name of the lock
+  -LockLevel ReadOnly `                    # Lock level: restricts modifications, allows read-only access
+  -ResourceGroupName Hq `                  # Target resource group
+  -Force                                   # Suppresses confirmation prompts
+# Retrieve all resource locks in the current context
+Get-AzResourceLock                          # Lists all locks applied at subscription, resource group, or resource level
+# Create a ReadOnly lock at the subscription level using PowerShell
+New-AzResourceLock `
+  -LockName NoModify `                     # Name of the lock
+  -LockLevel ReadOnly `                    # Lock level: read-only access only
+  -Scope /subscriptions/00da78ac-9d0e-427b-80da-e1b07c749f72 ` # Full scope path for the subscription
+  -Force                                   # Suppresses confirmation prompts
+# Remove a lock from a resource group using PowerShell
+Remove-AzResourceLock `
+  -ResourceGroupName Hq `                  # Resource group where the lock exists
+  -Name NoModify `                         # Name of the lock to remove
+  -Force                                   # Suppresses confirmation prompts
+
+
+# ARM (Azure Resource Management) Template to lock resources 
+
+# List any PowerShell commands that have "deployment" in their name (discoverability/help)
+Get-Command *deployment*            # Uses wildcard matching to find cmdlets/functions/aliases related to deployments
+# Deploy an ARM/Bicep template at the resource group scope with Azure CLI
+az deployment group create \
+  --resource-group Hq \             # Target resource group where the deployment will be applied
+  --name rgDeploy01 \               # (Optional) friendly name/ID for this deployment operation
+  --template-file ./main.bicep \    # Path to the ARM/Bicep template file to deploy (e.g., .bicep or .json)
+  --parameters ./main.parameters.json \  # (Optional) parameters file; you can also pass key=value pairs
+  --confirm-with-what-if            # (Optional) preview changes (What-If) before applying; remove to run directly
+# Notes:
+# - Scope "group" means the template targets resources inside the specified resource group.
+# - Common alternatives: 
+#     az deployment sub create      # Subscription-level deployments
+#     az deployment mg create       # Management group-level deployments
+#     az deployment tenant create   # Tenant-level deployments

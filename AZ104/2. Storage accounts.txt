@@ -1,0 +1,52 @@
+# Manage storage accounts and Blocks
+
+# Azure Storage Accounts
+Enterprise cloud storage
+Deployed as an Azure resource
+# Storage Account Contents
+- Binary large objects (blobs): [Block (docs and media), page (VHD/VHDX files), append (logging)]
+- File shares : [445 TCP]
+- Queues: [Apps Communication]
+- Tables: [Non structural, key value pairs]
+
+# Storage Account Settings
+Access keys: Keys used to authenticate and manage access to the storage account.
+Shared access signatures (SAS): Provides delegated access to resources with specific permissions and time limits.
+Encryption: Ensures data is securely stored and protected.
+Geo-replication: Replicates data across regions for high availability and disaster recovery.
+
+# File (Blob) Storage
+# Blobs are organized within blob containers: Data is stored in containers for better management.
+#Blob settings:
+Hot, Cool, and Archive storage tiers: Different tiers for cost and performance optimization.
+Automated life cycle management: Automatically manage data retention and movement.
+Blob public access: Control access permissions for blobs.
+Versioning, snapshots: Maintain versions and point-in-time copies of data.
+Soft delete: Allows recovery of deleted blobs within a retention period.
+
+# Storage Account File Shares
+Shared folder access: Available from on-premises or in the cloud over Transmission Control Protocol (TCP) port 445.
+OS requirements: Must support at least Server Message Block (SMB) v3.0.
+Accessibility: Can be accessed via drive mappings and mount points.
+
+# Storage Account Queues
+- App component 1: Drops message in queue.
+- App component 2: Reads message in queue.
+Description:
+Queues in Azure Storage allow asynchronous communication between application components. One component sends (drops) messages into the queue, and another component retrieves (reads) them, enabling decoupled and scalable systems.
+
+# Storage Account Tables
+- NoSQL-based: Designed for non-relational data storage.
+- Unstructured schema: Flexible schema for dynamic data models.
+- Storage for key and value pairs: Ideal for storing properties and metadata.
+Description:
+Azure Table Storage provides a NoSQL solution for storing large amounts of structured, non-relational data. It uses key-value pairs and supports an unstructured schema, making it suitable for scalable applications.
+
+# Create Storage Account
+> Storage account > Fill (subscription, Resource Group, name, region, performance, redundancy LRS {Local redundant, non critical} GRS {Geo redundant, backup scenarios} ZRS {Zone redundant, High availability} GZRS {Both GRS and ZRS} > Advanced config (blob, files, queues, tables) > Networking  access (Public, Defined IPs, private), Encryption MNK or CMK (Microsoft managed keys or costumer ...)
+- Every storage account has 2 pair of keys (Key, connection string)
+
+# Shared access signature SAS
+- Allowed services (Blob, file, Queue, Table), allowed resource types, allowed permissions
+
+
